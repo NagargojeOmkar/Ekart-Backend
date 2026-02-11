@@ -1,12 +1,21 @@
 class BaseError extends Error {
-  constructor(name, statusCode, description) {
-    super(description);
+  constructor({
+    name,
+    statusCode,
+    message,
+    code,
+    isOperational = true,
+    details = null
+  }) {
+    super(message);
 
     this.name = name;
     this.statusCode = statusCode;
-    this.description = description;
+    this.code = code;
+    this.isOperational = isOperational;
+    this.details = details;
 
-    Error.captureStackTrace(this);
+    Error.captureStackTrace(this, this.constructor);
   }
 }
 

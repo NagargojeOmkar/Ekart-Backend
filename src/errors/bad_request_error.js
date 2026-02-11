@@ -1,12 +1,29 @@
-const BaseError = require('./base_error');
+// Client ne galat input diya
+// missing field
+// wrong format
+// invalid data
 
-class BadRequestError extends BaseError {
-  constructor(description = "Bad Request") {
-    super(
-      "BadRequestError",
-      400,
-      description
-    );
+// Use Example
+// if (!title) {
+//   throw new BadRequestError("Title required");
+// }
+
+// Response:
+
+// 400 Bad Request
+
+const ApiError = require('./api_error');
+const CODES = require('./error_codes');
+
+class BadRequestError extends ApiError {
+  constructor(message, details) {
+    super({
+      name: "BadRequestError",
+      statusCode: 400,
+      message,
+      code: CODES.BAD_REQUEST,
+      details
+    });
   }
 }
 
