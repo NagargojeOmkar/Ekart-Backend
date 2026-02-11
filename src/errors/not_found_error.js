@@ -1,3 +1,5 @@
+const ApiError = require('./api_error');
+
 class NotFoundError extends ApiError {
   constructor(resource, id) {
     super({

@@ -1,3 +1,5 @@
+const ApiError = require('./api_error');
+
 class ValidationError extends ApiError {
   constructor(errorsArray) {
     super({
@@ -9,3 +11,5 @@ class ValidationError extends ApiError {
     });
   }
 }
+
+module.exports = ValidationError;

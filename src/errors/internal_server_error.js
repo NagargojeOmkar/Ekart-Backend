@@ -1,3 +1,5 @@
+const ApiError = require('./api_error');
+
 class InternalServerError extends BaseError {
   constructor(message, originalError) {
     super({

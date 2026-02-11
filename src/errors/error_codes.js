@@ -1,3 +1,5 @@
+const ApiError = require('./api_error');
+
 module.exports = {
   VALIDATION_FAILED: "VALIDATION_FAILED",
   RESOURCE_NOT_FOUND: "RESOURCE_NOT_FOUND",

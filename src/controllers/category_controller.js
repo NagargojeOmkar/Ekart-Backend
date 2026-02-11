@@ -1,6 +1,6 @@
 const Category = require('../models/category');
 const BadRequestError = require('../errors/bad_request_error');
-
+const NotFoundError = require('../errors/not_found_error');
 
 // CREATE
 async function create(req, res, next) {
@@ -8,7 +8,7 @@ async function create(req, res, next) {
     const { title, description } = req.body;
 
     if (!title || !description) {
-      throw new BadRequestError("Title & description required");
+      throw new NotFoundError("Title and description are required");
     }
 
     const category = await Category.create({

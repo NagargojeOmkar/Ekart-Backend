@@ -1,33 +1,36 @@
 // src/middleware/category_mid.js
 
+const ValidationError = require('../errors/validation_error');
+
 function validateCreateCategory(req, res, next) {
   try {
     const { title, description } = req.body;
 
     // required check
-    if (!title || !description) {
-      return res.status(400).json({
-        success: false,
-        message: "Title and description are required"
-      });
+    console.log(req.body);
+    if (!req.body.title || !req.body.description) {
+      return next(new ValidationError([
+        { field: "title", message: "Title is required" },
+        { field: "description", message: "Description is required" }
+      ]));
+      next();
     }
 
     // type check
     if (typeof title !== 'string' || typeof description !== 'string') {
-      return res.status(400).json({
-        success: false,
-        message: "Title and description must be string"
-      });
+      return next(new ValidationError([
+        { field: "title", message: "Title must be a string" },
+        { field: "description", message: "Description must be a string" }
+      ]));
     }
 
     // trim check
     if (!title.trim() || !description.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "Fields cannot be empty"
-      });
-    }
-
+      return next(new ValidationError([
+        { field: "title", message: "Title cannot be empty" },
+        { field: "description", message: "Description cannot be empty" }
+      ]));
+    } 
     next(); // ✅ pass to controller
 
   } catch (err) {
@@ -41,10 +44,10 @@ function validateUpdateCategory(req, res, next) {
     const { title, description } = req.body;
 
     if (!title && !description) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one field required to update"
-      });
+      return next(new ValidationError([
+        { field: "title", message: "Title is required" },
+        { field: "description", message: "Description is required" }
+      ]));
     }
 
     next();
