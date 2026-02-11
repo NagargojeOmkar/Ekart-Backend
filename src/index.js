@@ -7,12 +7,15 @@ const PORT = serverConfig.PORT;
 
 const apiRouter = require("./routes/api_routes");
 const {category} = require("./models/category");
+const v1Router = require("./routes/v1/index");
 
 // Middleware to parse JSON requests
-app.use(express.json());    
+app.use(express.json());   // body parser
+app.use(express.urlencoded({ extended: true })); // optional forms  
 
 // Configure routes
 app.use("/api", apiRouter);
+app.use('/api/v1', v1Router);
 
 const db = require("./config/db_config");
 

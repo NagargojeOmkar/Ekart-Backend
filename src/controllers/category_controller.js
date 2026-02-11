@@ -1,43 +1,22 @@
-const BadRequestError = require("../errors/bad_request_error");
+const Category = require('../models/category');
+const BadRequestError = require('../errors/bad_request_error');
 
-function createCategory(req, res) {
+
+// CREATE
+async function create(req, res, next) {
   try {
-    // some db processing
+    const { title, description } = req.body;
 
-    return res.json({
-      success: true,
-      error: {},
-      message: 'Successfully created a product',
-      data: {
-        id: Math.random() * (20),
-        title: '',
-        description: '',
-        category: '',
-        price: 0,
-        image: ''
-      }
+    if (!title || !description) {
+      throw new BadRequestError("Title & description required");
+    }
+
+    const category = await Category.create({
+      title,
+      description
     });
 
-  } catch(error) {
-    console.log("Something went wrong", error);
-  }
-}
-
-function CategoryController(req, res, next) {
-  try {
-
-    const { title, description, category, price, image } = req.body;
-
-    if (!title) throw new BadRequestError("Category title is required");
-    if (!description) throw new BadRequestError("Category description is required");
-    if (!category) throw new BadRequestError("category is required");
-    if (!price) throw new BadRequestError("Category price is required");
-    if (!image) throw new BadRequestError("Category image is required");
-
-    return res.json({
-      success: true,
-      message: "Category created successfully"
-    });
+    res.status(201).json({ success: true, data: category });
 
   } catch (err) {
     next(err);
@@ -45,7 +24,66 @@ function CategoryController(req, res, next) {
 }
 
 
+// GET ALL
+async function getAll(req, res, next) {
+  try {
+    const data = await Category.findAll();
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+// GET BY ID
+async function getById(req, res, next) {
+  try {
+    const data = await Category.findByPk(req.params.id);
+    if (!data) throw new BadRequestError("Not found");
+
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+// UPDATE
+async function update(req, res, next) {
+  try {
+    const cat = await Category.findByPk(req.params.id);
+    if (!cat) throw new BadRequestError("Not found");
+
+    await cat.update(req.body);
+
+    res.json({ success: true, data: cat });
+
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+// DELETE
+async function remove(req, res, next) {
+  try {
+    const cat = await Category.findByPk(req.params.id);
+    if (!cat) throw new BadRequestError("Not found");
+
+    await cat.destroy();
+
+    res.json({ success: true, message: "Deleted" });
+
+  } catch (err) {
+    next(err);
+  }
+}
+
 
 module.exports = {
-    CategoryController
-}; 
+  create,
+  getAll,
+  getById,
+  update,
+  remove
+};
