@@ -1,26 +1,23 @@
-class productService {
-    constructor(productRepository) {
-        this.productRepository = productRepository;
+const ProductRepository = require('../repository/product_repository');
+class ProductService {
+    constructor() {
+        this.productRepository = new ProductRepository();
+    }   
+    async createProduct(data) {
+        return await this.productRepository.create(data);
     }
-
-    async createProduct(product) {
-        const res = await this.productRepository.create(product);
-        return res;
-    }
-    
     async getProductById(id) {
-        const res = await this.productRepository.getById(id);
-        return res;
-        }  
-    
-    async getAllProducts(filter) {
-        const res = await this.productRepository.getAll(filter);
-        return res;
+        return await this.productRepository.getById(id);
     }
-
+    async getAllProducts(filter) {
+        return await this.productRepository.getAll(filter);
+    }
     async updateProduct(id, data) {
-        const res = await this.productRepository.update(id, data);
-        return res; 
-    }};
+        return await this.productRepository.update(id, data);
+    }   
+    async deleteProduct(id) {
+        return await this.productRepository.delete(id);
+    }
+}
 
-    module.exports = productService;
+module.exports = ProductService;

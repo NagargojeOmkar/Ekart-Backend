@@ -1,3 +1,7 @@
+const BaseRepository = require('./base_repository');
+const { Product } = require('../models');
+const { Op } = require('sequelize');
+
 class ProductRepository extends BaseRepository {
   constructor() {
     super(Product);
@@ -13,3 +17,4 @@ class ProductRepository extends BaseRepository {
     });
   }
 }
+
