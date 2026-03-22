@@ -3,8 +3,8 @@ class ProductService {
     constructor() {
         this.productRepository = new ProductRepository();
     }   
-    async createProduct(data) {
-        return await this.productRepository.create(data);
+    async createProduct(title, description, price, categoryId, brandId) {
+        return await this.productRepository.createProduct({ title, description, price, categoryId, brandId });
     }
     async getProductById(id) {
         return await this.productRepository.getById(id);

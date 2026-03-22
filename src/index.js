@@ -11,6 +11,7 @@ const v1Router = require("./routes/v1/index");
 
 // Middleware to parse JSON requests
 app.use(express.json());   // body parser
+app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // optional forms  
 
 // Configure routes

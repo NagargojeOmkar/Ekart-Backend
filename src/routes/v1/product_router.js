@@ -1,3 +1,5 @@
+// src/routes/v1/product_router.js
+
 const express = require('express');
 const { create, getAll, getById, update, remove } = require('../../controllers/product_controller');
 
