@@ -7,27 +7,38 @@ const BadRequestError = require('../errors/bad_request_error');
 const NotFoundError = require('../errors/not_found_error');
 
 // CREATE PRODUCT
+const ValidationError = require('../errors/validation_error');
+
 async function create(req, res, next) {
   try {
     const { name, description, price, stock, categoryId } = req.body;
 
-    // ✅ Validation (undefined check - safe)
-    if (
-      name === undefined ||
-      description === undefined ||
-      price === undefined ||
-      stock === undefined ||
-      categoryId === undefined
-    ) {
-      throw new BadRequestError('All product fields are required');
+    let errors = [];
+
+    // 🔥 Basic validation (controller level)
+    if (!name) {
+      errors.push({ field: "name", message: "Name is required", value: name });
     }
 
-    // 👉 Service call (controller direct DB call nahi karega)
+    if (!description) {
+      errors.push({ field: "description", message: "Description is required" });
+    }
+
+    if (price === undefined) {
+      errors.push({ field: "price", message: "Price is required" });
+    }
+
+    // 👉 agar errors hai
+    if (errors.length > 0) {
+      throw new ValidationError(errors);
+    }
+
     const product = await productService.createProduct(req.body);
 
     res.status(201).json(product);
+
   } catch (error) {
-    next(error);
+    next(error); // 🔥 always forward
   }
 }
 

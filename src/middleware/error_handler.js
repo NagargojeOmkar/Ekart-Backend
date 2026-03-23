@@ -1,27 +1,36 @@
+// src/middlewares/error_handler.js
+
+const InternalServerError = require('../errors/internal_server_error');
+
 function errorHandler(err, req, res, next) {
+  console.error("ERROR:", err);
 
-  const isProd = process.env.NODE_ENV === "production";
-
-  // unknown error → wrap
-  if (!err.statusCode) {
-    err = new InternalServerError("Unexpected crash", err);
+  // ✅ Known error (custom)
+  if (err.statusCode) {
+    return res.status(err.statusCode).json({
+      success: false,
+      error: {
+        name: err.name,
+        message: err.message,
+        code: err.code,
+        details: err.details
+      }
+    });
   }
 
-  // server log (full)
-  console.error("🔥 ERROR LOG:", {
-    name: err.name,
-    code: err.code,
-    message: err.message,
-    stack: err.stack
-  });
+  // ❌ Unknown error → wrap
+  const internalError = new InternalServerError(
+    "Unexpected error occurred",
+    err
+  );
 
-  // client response (safe)
-  res.status(err.statusCode).json({
+  return res.status(500).json({
     success: false,
-    error: err.code,
-    message: err.message,
-    details: err.details,
-    stack: isProd ? undefined : err.stack
+    error: {
+      name: internalError.name,
+      message: internalError.message,
+      code: internalError.code
+    }
   });
 }
 

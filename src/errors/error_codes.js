@@ -1,4 +1,4 @@
-const ApiError = require('./api_error');
+// src/errors/error_codes.js
 
 module.exports = {
   VALIDATION_FAILED: "VALIDATION_FAILED",

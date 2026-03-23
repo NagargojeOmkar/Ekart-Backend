@@ -8,6 +8,10 @@ const PORT = serverConfig.PORT;
 const apiRouter = require("./routes/api_routes");
 const {category} = require("./models/category");
 const v1Router = require("./routes/v1/index");
+const errorHandler = require("./middleware/error_handler");
+
+// routes ke baad
+app.use(errorHandler);
 
 // Middleware to parse JSON requests
 app.use(express.json());   // body parser

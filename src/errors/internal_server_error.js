@@ -1,14 +1,19 @@
-const ApiError = require('./api_error');
+// src/errors/internal_server_error.js
 
-class InternalServerError extends BaseError {
-  constructor(message, originalError) {
+const ApiError = require('./api_error');
+const CODES = require('./error_codes');
+
+class InternalServerError extends ApiError {
+  constructor(message = "Something went wrong", originalError = null) {
     super({
       name: "InternalServerError",
       statusCode: 500,
       message,
-      code: "INTERNAL_ERROR",
+      code: CODES.INTERNAL_ERROR,
       isOperational: false,
-      details: originalError?.message
+      details: originalError?.message || null
     });
   }
 }
+
+module.exports = InternalServerError;

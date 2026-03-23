@@ -1,3 +1,5 @@
+// src/errors/base_error.js
+
 class BaseError extends Error {
   constructor({
     name,

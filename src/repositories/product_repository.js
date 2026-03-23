@@ -6,27 +6,36 @@ const { Op } = require('sequelize');
 
 class ProductRepository extends BaseRepository {
   constructor() {
-    // 👉 BaseRepository ko model pass kar rahe hai
     super(Product);
   }
 
-  // CREATE PRODUCT
+  // CREATE
   async createProduct(data) {
-    const { price } = data;
-
-    // ✅ Validation (business rule)
-    if (price <= 0) {
-      throw new Error('Price must be greater than zero');
-    }
-
     return await this.create(data);
   }
 
-  // GET ALL (Pagination + Filter 🔥)
+  // GET ALL (Pagination + Filter + Safe Handling 🔥)
   async getAll(query) {
+
+    console.log("REPO RECEIVED QUERY:", query); // 🔥 debug
+
+    // 🧠 CASE 1: Agar service ne already processed query bheji hai
+    if (query.where) {
+      console.log("USING PRE-BUILT QUERY");
+
+      const { count, rows } = await this.model.findAndCountAll(query);
+
+      return {
+        total: count,
+        page: 1,
+        limit: query.limit || 5,
+        data: rows
+      };
+    }
+
+    // 🧠 CASE 2: Raw query (normal flow)
     let { page = 1, limit = 5, minPrice, maxPrice, categoryId } = query;
 
-    // ✅ SAFE parsing (string → number)
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 5;
 
@@ -34,29 +43,36 @@ class ProductRepository extends BaseRepository {
 
     let where = {};
 
-    // 🎯 Price filter
-    if (minPrice && maxPrice) {
-      where.price = {
-        [Op.between]: [
-          parseInt(minPrice) || 0,
-          parseInt(maxPrice) || 999999
-        ]
-      };
+    // 🎯 PRICE FILTER (FINAL FIXED 🔥)
+    const min = parseInt(minPrice);
+    const max = parseInt(maxPrice);
+
+    if (!isNaN(min) || !isNaN(max)) {
+      where.price = {};
+
+      if (!isNaN(min)) {
+        where.price[Op.gte] = min;
+      }
+
+      if (!isNaN(max)) {
+        where.price[Op.lte] = max;
+      }
     }
 
-    // 🎯 Category filter
-    if (categoryId) {
+    // 🎯 CATEGORY FILTER
+    if (categoryId && !isNaN(parseInt(categoryId))) {
       where.categoryId = parseInt(categoryId);
     }
 
-    // 🔥 Sequelize method (data + count)
+    console.log("FINAL WHERE:", where); // 🔥 debug
+
+    // 🔥 FINAL QUERY
     const { count, rows } = await this.model.findAndCountAll({
       where,
       limit,
       offset
     });
 
-    // ✅ Clean response format
     return {
       total: count,
       page,
