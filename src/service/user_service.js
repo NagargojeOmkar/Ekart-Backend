@@ -22,6 +22,11 @@ class UserService {
     return await this.userRepository.create(data);
   }
 
+  async getAllUsers() {
+    return await this.userRepository.getAll();
+    
+  }
+
   async getUser(id) {
     return await this.userRepository.getById(id);
   }

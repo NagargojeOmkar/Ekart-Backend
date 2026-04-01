@@ -1,23 +1,34 @@
-// src/routes/v1/product_router.js
+// // src/routes/v1/product_router.js
 
 const express = require('express');
-const { create, getAll, getById, update, remove } = require('../../controllers/product_controller');
-
+const { getAll, getById, create, update, remove } = require('../../controllers/product_controller');
 const router = express.Router();
+const authMiddleware = require('../../middleware/auth_middleware');
+const { isAdmin } = require('../../middleware/role_middleware');
 
-// CREATE
-router.post('/products', create);
 
-// GET ALL
 router.get('/products', getAll);
+router.get('/products/:id', getById);
 
-// GET BY ID
-router.get('/products/:id', getById); 
+router.post('/products', authMiddleware, isAdmin, create);
+router.put('/products/:id', authMiddleware, isAdmin, update);
+router.delete('/products/:id', authMiddleware, isAdmin, remove);
 
-// UPDATE
-router.put('/products/:id', update);
+// // CREATE
+// router.post('/products', create);
 
-// DELETE 
-router.delete('/products/:id', remove);
+// // GET ALL
+// router.get('/products', getAll);
+
+// // GET BY ID
+// router.get('/products/:id', getById); 
+
+// // UPDATE
+// router.put('/products/:id', update);
+
+// // DELETE 
+// router.delete('/products/:id', remove);
+
+
 
 module.exports = router;

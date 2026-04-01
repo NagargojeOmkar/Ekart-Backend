@@ -1,3 +1,5 @@
+// src/config/db_config.js
+
 const sequalize = require('sequelize');
 const {DB_HOST, DB_USER, DB_PASSWORD, DB_NAME} = require("./serverConfig");
 

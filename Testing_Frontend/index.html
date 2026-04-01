@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ekart Auth</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+    :root{--bg:#0a0a0f;--surface:#13131a;--border:#1e1e2e;--accent:#6c63ff;--green:#00e5a0;--text:#e8e8f0;--muted:#6b6b80;--danger:#ff4d6d;--input-bg:#0d0d14}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(108,99,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(108,99,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+    .glow{position:fixed;width:500px;height:500px;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0}
+    .glow-1{background:rgba(108,99,255,.12);top:-100px;left:-100px}
+    .glow-2{background:rgba(255,101,132,.08);bottom:-100px;right:-100px}
+    .page{display:none;width:100%;min-height:100vh;align-items:center;justify-content:center;position:relative;z-index:1}
+    .page.active{display:flex}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px 36px;width:100%;max-width:420px;box-shadow:0 0 60px rgba(108,99,255,.06),0 24px 48px rgba(0,0,0,.4);animation:slideUp .4s ease}
+    @keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+    .logo{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:6px}
+    .logo span{color:var(--accent)}
+    .subtitle{color:var(--muted);font-size:13px;margin-bottom:28px}
+    .tabs{display:flex;gap:4px;background:var(--input-bg);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:24px}
+    .tab{flex:1;padding:9px;text-align:center;font-size:13px;font-weight:500;cursor:pointer;border-radius:9px;color:var(--muted);transition:all .2s;border:none;background:none;font-family:'DM Sans',sans-serif}
+    .tab.active{background:var(--accent);color:#fff}
+    .field{margin-bottom:14px}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500}
+    input{width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s}
+    input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,.12)}
+    input.input-error{border-color:var(--danger);box-shadow:0 0 0 3px rgba(255,77,109,.12)}
+    input::placeholder{color:var(--muted)}
+    .btn{width:100%;padding:13px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:'DM Sans',sans-serif}
+    .btn-primary{background:var(--accent);color:#fff;margin-bottom:10px}
+    .btn-primary:hover{background:#5a52e0;transform:translateY(-1px);box-shadow:0 6px 20px rgba(108,99,255,.3)}
+    .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border);margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:10px}
+    .btn-outline:hover{border-color:var(--accent);background:rgba(108,99,255,.05)}
+    .divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:12px}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+    .switch{text-align:center;font-size:13px;color:var(--muted);margin-top:16px}
+    .switch a{color:var(--accent);cursor:pointer;font-weight:500}
+    .switch a:hover{text-decoration:underline}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ── TOAST NOTIFICATIONS ───────────────────────────────────── */
+    #toast-container{
+      position:fixed;top:20px;right:20px;z-index:9999;
+      display:flex;flex-direction:column;gap:10px;
+      pointer-events:none;
+    }
+    .toast{
+      display:flex;align-items:flex-start;gap:12px;
+      padding:14px 16px;border-radius:14px;
+      min-width:300px;max-width:380px;
+      font-size:13px;line-height:1.5;
+      pointer-events:all;
+      box-shadow:0 8px 32px rgba(0,0,0,0.5);
+      animation:toastIn .35s cubic-bezier(.34,1.56,.64,1);
+      position:relative;overflow:hidden;
+      backdrop-filter:blur(12px);
+    }
+    .toast.removing{animation:toastOut .3s ease forwards}
+
+    @keyframes toastIn{
+      from{opacity:0;transform:translateX(120px) scale(.9)}
+      to{opacity:1;transform:translateX(0) scale(1)}
+    }
+    @keyframes toastOut{
+      from{opacity:1;transform:translateX(0) scale(1);max-height:200px;margin-bottom:0}
+      to{opacity:0;transform:translateX(120px) scale(.9);max-height:0;margin-bottom:-10px;padding:0}
+    }
+
+    .toast-success{background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3);color:#e8e8f0}
+    .toast-error  {background:rgba(255,77,109,.12); border:1px solid rgba(255,77,109,.3); color:#e8e8f0}
+    .toast-info   {background:rgba(108,99,255,.15); border:1px solid rgba(108,99,255,.3); color:#e8e8f0}
+    .toast-warn   {background:rgba(255,180,0,.12);  border:1px solid rgba(255,180,0,.3);  color:#e8e8f0}
+
+    .toast-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+    .toast-body{flex:1}
+    .toast-title{font-weight:700;font-size:13px;margin-bottom:2px}
+    .toast-msg{color:var(--muted);font-size:12px}
+
+    .toast-close{
+      background:none;border:none;color:var(--muted);
+      cursor:pointer;font-size:16px;line-height:1;
+      padding:0;flex-shrink:0;margin-top:1px;
+      transition:color .2s;
+    }
+    .toast-close:hover{color:var(--text)}
+
+    /* progress bar */
+    .toast-progress{
+      position:absolute;bottom:0;left:0;height:3px;
+      border-radius:0 0 14px 14px;
+      animation:toastProgress linear forwards;
+    }
+    .toast-success .toast-progress{background:var(--green)}
+    .toast-error   .toast-progress{background:var(--danger)}
+    .toast-info    .toast-progress{background:var(--accent)}
+    .toast-warn    .toast-progress{background:#ffb400}
+    @keyframes toastProgress{from{width:100%}to{width:0%}}
+
+    /* ── DASHBOARD ───────────────────────────────────────────────── */
+    .dashboard{max-width:680px;width:100%;padding:24px}
+    .dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+    .dash-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+    .dash-logo span{color:var(--accent)}
+    .btn-logout{background:transparent;border:1px solid var(--border);color:var(--muted);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;transition:all .2s}
+    .btn-logout:hover{border-color:var(--danger);color:var(--danger)}
+    .welcome-card{background:linear-gradient(135deg,rgba(108,99,255,.15),rgba(255,101,132,.08));border:1px solid rgba(108,99,255,.2);border-radius:16px;padding:28px;margin-bottom:20px}
+    .welcome-name{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;margin-bottom:4px}
+    .welcome-sub{color:var(--muted);font-size:13px}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+    .info-tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+    .info-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+    .info-value{font-size:14px;font-weight:500;word-break:break-all}
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase}
+    .badge-local{background:rgba(108,99,255,.15);color:var(--accent)}
+    .badge-google{background:rgba(66,133,244,.15);color:#4285f4}
+    .token-box{background:var(--input-bg);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .token-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+    .token-value{font-family:monospace;font-size:11px;color:var(--green);word-break:break-all;line-height:1.6}
+  </style>
+</head>
+<body>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- AUTH PAGE -->
+<div class="page active" id="auth-page">
+  <div class="card">
+    <div class="logo">ek<span>art</span></div>
+    <div class="subtitle">Sign in to your account</div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">Login</button>
+      <button class="tab" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="tab-login">
+      <div class="field"><label>Email Address</label><input type="email" id="login-email" placeholder="you@example.com" /></div>
+      <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleManualLogin()" /></div>
+      <button class="btn btn-primary" id="btn-login" onclick="handleManualLogin()">Sign In</button>
+      <div class="divider">or</div>
+      <button class="btn btn-outline" onclick="handleGoogleLogin()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.6 2.5 30.2 0 24 0 14.8 0 7 5.4 3 13.3l7.8 6C12.8 13 18 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.8 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7L2.5 13.3A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.5 10.7l8.3-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.3-7.7 2.3-6 0-11.1-4-12.9-9.4l-8 6.2C7 43 15 48 24 48z"/></svg>
+        Continue with Google
+      </button>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="tab-register" style="display:none;">
+      <div class="field"><label>Full Name</label><input type="text" id="reg-name" placeholder="Omkar Nagargoje" /></div>
+      <div class="field"><label>Email Address</label><input type="email" id="reg-email" placeholder="you@example.com" /></div>
+      <div class="field"><label>Password</label><input type="password" id="reg-password" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')handleRegister()" /></div>
+      <button class="btn btn-primary" id="btn-register" onclick="handleRegister()">Create Account</button>
+      <div class="divider">or</div>
+      <button class="btn btn-outline" onclick="handleGoogleLogin()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.6 2.5 30.2 0 24 0 14.8 0 7 5.4 3 13.3l7.8 6C12.8 13 18 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.8 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7L2.5 13.3A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.5 10.7l8.3-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.3-7.7 2.3-6 0-11.1-4-12.9-9.4l-8 6.2C7 43 15 48 24 48z"/></svg>
+        Sign up with Google
+      </button>
+    </div>
+
+    <div class="switch" id="switch-text">Don't have an account? <a onclick="switchTab('register')">Register</a></div>
+  </div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div class="page" id="dashboard-page">
+  <div class="dashboard">
+    <div class="dash-header">
+      <div class="dash-logo">ek<span>art</span></div>
+      <button class="btn-logout" onclick="handleLogout()">Logout</button>
+    </div>
+    <div class="welcome-card">
+      <div class="welcome-name">Welcome back, <span id="dash-name">—</span> 👋</div>
+      <div class="welcome-sub">You're securely logged in</div>
+    </div>
+    <div class="info-grid">
+      <div class="info-tile"><div class="info-label">Email</div><div class="info-value" id="dash-email">—</div></div>
+      <div class="info-tile"><div class="info-label">User ID</div><div class="info-value" id="dash-id">—</div></div>
+      <div class="info-tile"><div class="info-label">Provider</div><div class="info-value" id="dash-provider">—</div></div>
+      <div class="info-tile"><div class="info-label">Role</div><div class="info-value" id="dash-role">—</div></div>
+    </div>
+    <div class="token-box">
+      <div class="token-label">JWT Access Token</div>
+      <div class="token-value" id="dash-token">—</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ══════════════════════════════════════════════════════════════════
+  //  FIREBASE CONFIG
+  // ══════════════════════════════════════════════════════════════════
+  const firebaseConfig = {
+    apiKey: "AIzaSyA6TDNy3IsWApmpL3VfOuekJJNqAj9tB_Q",
+    authDomain: "ekart-19912.firebaseapp.com",
+    projectId: "ekart-19912",
+    storageBucket: "ekart-19912.firebasestorage.app",
+    messagingSenderId: "229610237503",
+    appId: "1:229610237503:web:7bcebbaa6205576789528a"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const API = "http://localhost:3000/api/v1";
+
+  // ══════════════════════════════════════════════════════════════════
+  //  TOAST SYSTEM
+  // ══════════════════════════════════════════════════════════════════
+  const TOAST_ICONS = {
+    success: '✅',
+    error:   '❌',
+    info:    'ℹ️',
+    warn:    '⚠️',
+  };
+  const TOAST_TITLES = {
+    success: 'Success',
+    error:   'Error',
+    info:    'Info',
+    warn:    'Warning',
+  };
+
+  function toast(message, type = 'error', duration = 4000) {
+    const container = document.getElementById('toast-container');
+
+    const el = document.createElement('div');
+    el.className = `toast toast-${type}`;
+    el.innerHTML = `
+      <div class="toast-icon">${TOAST_ICONS[type]}</div>
+      <div class="toast-body">
+        <div class="toast-title">${TOAST_TITLES[type]}</div>
+        <div class="toast-msg">${message}</div>
+      </div>
+      <button class="toast-close" onclick="removeToast(this.parentElement)">✕</button>
+      <div class="toast-progress" style="animation-duration:${duration}ms"></div>
+    `;
+
+    container.appendChild(el);
+
+    // Auto remove
+    const timer = setTimeout(() => removeToast(el), duration);
+    el._timer = timer;
+  }
+
+  function removeToast(el) {
+    if (!el || el._removing) return;
+    el._removing = true;
+    clearTimeout(el._timer);
+    el.classList.add('removing');
+    el.addEventListener('animationend', () => el.remove(), { once: true });
+  }
+
+  // Shorthand helpers
+  const toastSuccess = (msg, dur) => toast(msg, 'success', dur);
+  const toastError   = (msg, dur) => toast(msg, 'error',   dur);
+  const toastInfo    = (msg, dur) => toast(msg, 'info',    dur);
+  const toastWarn    = (msg, dur) => toast(msg, 'warn',    dur);
+
+  // ══════════════════════════════════════════════════════════════════
+  //  INPUT HIGHLIGHT HELPERS
+  // ══════════════════════════════════════════════════════════════════
+  function markError(...ids) {
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.add('input-error');
+        el.addEventListener('input', () => el.classList.remove('input-error'), { once: true });
+      }
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  //  UI HELPERS
+  // ══════════════════════════════════════════════════════════════════
+  function setLoading(btnId, loading, label) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.innerHTML = loading ? '<span class="spinner"></span> Please wait...' : label;
+  }
+
+  function switchTab(tab) {
+    document.getElementById('tab-login').style.display    = tab === 'login'    ? 'block' : 'none';
+    document.getElementById('tab-register').style.display = tab === 'register' ? 'block' : 'none';
+    document.querySelectorAll('.tab').forEach((t, i) =>
+      t.classList.toggle('active', (tab === 'login' && i === 0) || (tab === 'register' && i === 1))
+    );
+    document.getElementById('switch-text').innerHTML = tab === 'login'
+      ? `Don't have an account? <a onclick="switchTab('register')">Register</a>`
+      : `Already have an account? <a onclick="switchTab('login')">Login</a>`;
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  //  API CALL
+  // ══════════════════════════════════════════════════════════════════
+  async function apiCall(url, body) {
+    try {
+      const res  = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || data.error || `Server error ${res.status}`);
+      return data;
+    } catch (err) {
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        throw new Error('Cannot reach server. Make sure backend is running on http://localhost:3000 and CORS is enabled.');
+      }
+      throw err;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  //  MANUAL REGISTER
+  // ══════════════════════════════════════════════════════════════════
+  async function handleRegister() {
+    const name     = document.getElementById('reg-name').value.trim();
+    const email    = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+
+    if (!email) { toastError('Please enter your email address.'); markError('reg-email'); return; }
+    if (!password) { toastError('Please enter a password.'); markError('reg-password'); return; }
+    if (password.length < 6) { toastError('Password must be at least 6 characters.'); markError('reg-password'); return; }
+
+    setLoading('btn-register', true);
+    try {
+      const data = await apiCall(`${API}/auth/register`, { name, email, password });
+      localStorage.setItem('token', data.token);
+      toastSuccess('Account created! Redirecting...');
+      setTimeout(() => showDashboard(data.user, data.token), 1200);
+    } catch (err) {
+      toastError(err.message);
+    } finally {
+      setLoading('btn-register', false, 'Create Account');
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  //  MANUAL LOGIN
+  // ══════════════════════════════════════════════════════════════════
+  async function handleManualLogin() {
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    if (!email) { toastError('Please enter your email address.'); markError('login-email'); return; }
+    if (!password) { toastError('Please enter your password.'); markError('login-password'); return; }
+
+    setLoading('btn-login', true);
+    try {
+      const data = await apiCall(`${API}/auth/login`, { email, password });
+      localStorage.setItem('token', data.token);
+      toastSuccess('Login successful! Redirecting...');
+      setTimeout(() => showDashboard(data.user, data.token), 1200);
+    } catch (err) {
+      // Friendly error messages for common cases
+      const msg = err.message.toLowerCase();
+      if (msg.includes('not found') || msg.includes('no user')) {
+        toastError('No account found with this email. Please register first.');
+        markError('login-email');
+      } else if (msg.includes('password') || msg.includes('invalid')) {
+        toastError('Incorrect password. Please try again.');
+        markError('login-password');
+      } else if (msg.includes('google') || msg.includes('provider')) {
+        toastWarn('This email is registered with Google. Please use Google Sign In.');
+      } else if (msg.includes('cannot reach') || msg.includes('fetch')) {
+        toastError('Server is unreachable. Check if your backend is running.');
+      } else {
+        toastError(err.message);
+      }
+    } finally {
+      setLoading('btn-login', false, 'Sign In');
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  //  GOOGLE LOGIN
+  // ══════════════════════════════════════════════════════════════════
+  async function handleGoogleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try {
+      toastInfo('Opening Google sign in...', 2000);
+      const result  = await auth.signInWithPopup(provider);
+      const idToken = await result.user.getIdToken();
+      const data    = await apiCall(`${API}/auth/firebase`, { idToken });
+      localStorage.setItem('token', data.token);
+      toastSuccess('Google login successful! Redirecting...');
+      setTimeout(() => showDashboard(data.user, data.token), 1200);
+    } catch (err) {
+      if (err.code === 'auth/popup-closed-by-user') {
+        toastWarn('Google sign in was cancelled.');
+        return;
+      }
+      if (err.code === 'auth/popup-blocked') {
+        toastError('Popup was blocked by your browser. Please allow popups for this site.');
+        return;
+      }
+      if (err.code === 'auth/network-request-failed') {
+        toastError('Network error. Check your internet connection.');
+        return;
+      }
+      toastError(err.message || 'Google login failed. Please try again.');
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  //  DASHBOARD
+  // ══════════════════════════════════════════════════════════════════
+  function showDashboard(user, token) {
+    document.getElementById('auth-page').classList.remove('active');
+    document.getElementById('dashboard-page').classList.add('active');
+    document.getElementById('dash-name').textContent  = user.name  || 'User';
+    document.getElementById('dash-email').textContent = user.email || '—';
+    document.getElementById('dash-id').textContent    = user.id    || '—';
+    document.getElementById('dash-role').textContent  = user.role  || 'user';
+    document.getElementById('dash-token').textContent = token;
+    const badges = {
+      local:  '<span class="badge badge-local">Email / Password</span>',
+      google: '<span class="badge badge-google">Google</span>',
+    };
+    document.getElementById('dash-provider').innerHTML =
+      badges[user.provider] || `<span class="badge badge-local">${user.provider}</span>`;
+  }
+
+  function handleLogout() {
+    auth.signOut().catch(() => {});
+    localStorage.removeItem('token');
+    document.getElementById('dashboard-page').classList.remove('active');
+    document.getElementById('auth-page').classList.add('active');
+    switchTab('login');
+    toastInfo('You have been logged out.');
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  //  AUTO LOGIN
+  // ══════════════════════════════════════════════════════════════════
+  (async function autoLogin() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const res  = await fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success) {
+        showDashboard(data.user, token);
+        toastSuccess(`Welcome back, ${data.user.name || 'User'}!`, 3000);
+      } else {
+        localStorage.removeItem('token');
+      }
+    } catch (e) {
+      localStorage.removeItem('token');
+    }
+  })();
+</script>
+</body>
+</html>
