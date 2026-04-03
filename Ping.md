@@ -66,3 +66,6 @@ Module 6: Ping (Health Check)
 
   ▎ Note: Category and Brand endpoints don't have authMiddleware protection in your current code. Anyone can create/update/delete them. Add authMiddleware and isAdmin to
   those routes if you want to restrict access.
+
+
+  
