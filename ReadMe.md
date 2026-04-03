@@ -1,6 +1,4 @@
-Here's the properly formatted GitHub README markdown that you can directly copy and paste:
 
-```markdown
 # 🛒 Ekart Backend API
 
 ## Overview
