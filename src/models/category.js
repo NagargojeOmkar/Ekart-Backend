@@ -1,7 +1,7 @@
-const { DataTypes } = require('sequelize');
 const db = require("../config/db_config");
+const DataTypes = db.Sequelize.DataTypes;
 
-const Category = db.define("Category", {
+const Category = db.sequelize.define("Category", {
 
   id: {
     type: DataTypes.INTEGER,

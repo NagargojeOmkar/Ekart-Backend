@@ -1,3 +1,5 @@
+// src/index.js
+
 const express = require("express");
 const app = express();
 
@@ -35,7 +37,7 @@ async function initializeDatabase() {
     try {
         if (process.env.DB_SYNC === "true") {
             console.log("⚡ DB Sync Enabled...");
-            await db.sync({ alter: true });
+            await db.sequelize.sync({ alter: true });
             console.log("✅ Database synced successfully");
         } else {
             console.log("🚀 DB Sync Skipped (Production Mode)");

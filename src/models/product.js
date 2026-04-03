@@ -1,37 +1,47 @@
 const db = require('../config/db_config');
+const DataTypes = db.Sequelize.DataTypes;
 
-const Product = db.define('product', {
+const Product = db.sequelize.define('Product', {
+
   id: {
-    type: db.Sequelize.INTEGER,
+    type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true
-  },    
+  },
+
   name: {
-    type: db.Sequelize.STRING,
+    type: DataTypes.STRING,
     allowNull: false
   },
-  description : {
-    type: db.Sequelize.STRING,
+
+  description: {
+    type: DataTypes.STRING,
     allowNull: false
- },
-    price: {
-    type: db.Sequelize.FLOAT,
+  },
+
+  price: {
+    type: DataTypes.FLOAT,
     allowNull: false
-  },    
-    stock: {    
-    type: db.Sequelize.INTEGER,
+  },
+
+  stock: {
+    type: DataTypes.INTEGER,
     allowNull: false
-  },    
-    categoryId: {   
-    type: db.Sequelize.INTEGER,
-    allowNull: false,
-    references: {   
-        model: 'categories',    
-        key: 'id'
-    }
+  },
+
+  categoryId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+
+  brandId: {   // 🔥 added (optional but useful)
+    type: DataTypes.INTEGER,
+    allowNull: true
   }
+
+}, {
+  tableName: 'products',
+  timestamps: true
 });
 
 module.exports = Product;
-
-    

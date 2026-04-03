@@ -1,44 +1,47 @@
-// src/models/user.js
-const { DataTypes } = require('sequelize');
 const db = require('../config/db_config');
+const DataTypes = db.Sequelize.DataTypes;
 
-const User = db.define('User', {
+const User = db.sequelize.define('User', {
+
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
+
   name: {
     type: DataTypes.STRING,
     allowNull: true,
   },
+
   email: {
     type: DataTypes.STRING,
     unique: true,
-    allowNull: true, // null for phone-only users
-    validate: {
-      isEmail: true,
-    },
+    allowNull: true,
+    validate: { isEmail: true },
   },
+
   mobile: {
     type: DataTypes.STRING,
     unique: true,
-    allowNull: true, // null for email-only users
+    allowNull: true,
   },
+
   password: {
     type: DataTypes.STRING,
-    allowNull: true, // null for Google / OTP users
+    allowNull: true,
   },
+
   provider: {
     type: DataTypes.ENUM('local', 'google', 'mobile', 'firebase'),
     defaultValue: 'local',
-    allowNull: false,
   },
+
   role: {
     type: DataTypes.ENUM('user', 'admin'),
     defaultValue: 'user',
-    allowNull: false,
-  },
+  }
+
 }, {
   tableName: 'users',
   timestamps: true,

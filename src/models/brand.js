@@ -1,21 +1,23 @@
-// src/models/brand.js
-
 const db = require('../config/db_config');
+const DataTypes = db.Sequelize.DataTypes;
 
-const Brand = db.define('brand', {
+const Brand = db.sequelize.define('Brand', {
   id: {
-    type: db.Sequelize.INTEGER, 
+    type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true
   },
   name: {
-    type: db.Sequelize.STRING,  
+    type: DataTypes.STRING,
     allowNull: false
   },
   description: {
-    type: db.Sequelize.STRING,  
+    type: DataTypes.STRING,
     allowNull: false
   }
+}, {
+  tableName: 'brands',
+  timestamps: true
 });
 
 module.exports = Brand;
