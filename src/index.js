@@ -24,7 +24,6 @@ app.use(cors({ origin: '*' })); // add this before your routes
 
 
 // ✅ Routes
-app.use("/api", apiRouter);
 app.use("/api/v1", v1Router);
 
 

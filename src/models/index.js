@@ -7,6 +7,8 @@ const Category = require('./category');
   const User = require('./user');
   const Cart = require('./cart');
   const CartItem = require('./CartItem');
+  const Order = require('./Order');
+  const OrderItem = require('./OrderItem');
 
   // 🔥 THIS LINE TRIGGERS ALL ASSOCIATIONS
   require('./association');
@@ -17,5 +19,7 @@ const Category = require('./category');
     Product,
     User,
     Cart,
-    CartItem
+    CartItem,
+    Order,
+    OrderItem
   };
